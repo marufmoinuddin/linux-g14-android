@@ -3,7 +3,7 @@
 # Check if PKGBUILD exists in the current directory
 if [ -f PKGBUILD ]; then
 
-    # Add "-binderfs" prefix to pkgbase variable
+    # Add "-binderfs" prefix to pkgbase
     sed -i 's/pkgbase=.*/pkgbase=linux-g14-binderfs/' PKGBUILD
     # Search for the prepare() function and add the lines before the closing }
     if grep -q 'prepare()' PKGBUILD; then
