@@ -1,46 +1,39 @@
-# This is a basic workflow to help you get started with Actions
+name: Build Linux-g14 Arch Kernel
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - master
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        uses: marufmoinuddin/arch-makepkg-action@master
-        with:
-          repos: >
-            archlinuxcn=https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
-          before: "sudo pacman -S --noconfirm archlinuxcn-keyring"
-          packages: >        
-            lib32-gnutls
-            devtools
-            base-devel
-          scripts: "makepkg"
-      - name: Release
-        uses: marufmoinuddin/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: linux-g14-android*.pkg*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Set up yay (AUR helper)
+      run: |
+        git clone https://aur.archlinux.org/yay.git
+        cd yay
+        makepkg -si --noconfirm
+
+    - name: Install build dependencies
+      run: |
+        yay -S --needed --noconfirm base-devel
+        yay -S --needed --noconfirm linux-headers
+
+    - name: Add CONFIG_ANDROID options to prepare()
+      run: |
+        cd ${{ github.workspace }}
+        bash add_lines.sh
+
+    - name: Configure and build kernel
+      run: |
+        cd ${{ github.workspace }}
+        makepkg -s --noconfirm
+        echo "==============="
+        echo "Package created:"
+        echo `ls *.pkg.tar.zst`
+        echo "==============="
