@@ -27,7 +27,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        uses: vufa/arch-makepkg-action@master
+        uses: marufmoinuddin/arch-makepkg-action@master
         with:
           repos: >
             archlinuxcn=https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
@@ -38,7 +38,7 @@ jobs:
             base-devel
           scripts: "makepkg"
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: marufmoinuddin/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: linux-g14-android*.pkg*
