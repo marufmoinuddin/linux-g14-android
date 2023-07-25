@@ -13,27 +13,29 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up yay (AUR helper)
-      run: |
-        git clone https://aur.archlinux.org/yay.git
-        cd yay
-        makepkg -si --noconfirm
+    - name: Set up Docker
+      uses: docker/setup-docker@v1
 
-    - name: Install build dependencies
+    - name: Build Arch Linux kernel in Docker
       run: |
-        yay -S --needed --noconfirm base-devel
-        yay -S --needed --noconfirm linux-headers
+        docker pull archlinux/base
+        docker run -v ${{ github.workspace }}:/pkg archlinux/base /bin/bash -c '
+          pacman -Sy --noconfirm devtools base-devel linux-headers # Install build dependencies
+          cd /tmp
+          git clone https://aur.archlinux.org/linux-g14.git
+          cd linux-g14
+          cp /pkg/add_lines.sh ./
+          bash add_lines.sh
+          makepkg -s --noconfirm
+        '
 
-    - name: Add CONFIG_ANDROID options to prepare()
+    - name: Move package to workspace
       run: |
-        cd ${{ github.workspace }}
-        bash add_lines.sh
+        mkdir ${{ github.workspace }}/pkg
+        mv /tmp/linux-g14/*.pkg.tar.zst ${{ github.workspace }}/pkg/
 
-    - name: Configure and build kernel
-      run: |
-        cd ${{ github.workspace }}
-        makepkg -s --noconfirm
-        echo "==============="
-        echo "Package created:"
-        echo `ls *.pkg.tar.zst`
-        echo "==============="
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-g14-kernel
+        path: ${{ github.workspace }}/pkg/*.pkg.tar.zst
