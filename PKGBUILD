@@ -251,11 +251,6 @@ prepare() {
   # Note the double escaped quotes above, sed strips one; the final result in .config needs to contain single slash
   # escaped quotes (eg: `CONFIG_CMDLINE="foo.dyndbg=\"+p\""`) to avoid dyndbg parse errors at boot. This is impossible
   # with the current kernel config script.
-  scripts/config --enable  CONFIG_ANDROID
-  scripts/config --enable  CONFIG_ANDROID_BINDER_IPC
-  scripts/config --enable  CONFIG_ANDROID_BINDERFS
-  scripts/config --set-str CONFIG_ANDROID_BINDER_DEVICES ""
-
 }
 
 build() {
